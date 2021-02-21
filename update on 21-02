@@ -1,0 +1,185 @@
+import pyttsx3
+import datetime
+import time
+import wikipedia
+import speech_recognition as sr
+import webbrowser
+import pyjokes
+import os
+import pywhatkit
+import requests
+import wolframalpha
+
+
+
+engine = pyttsx3.init('sapi5')
+voices = engine.getProperty('voices')
+
+engine.setProperty('voice',voices[1].id)
+engine.setProperty('rate',140)
+engine.setProperty('volume',1.5)
+
+def speak(audio):
+    engine.say(audio)
+    engine.runAndWait()
+
+
+def wish():
+    hour = (datetime.datetime.now().hour)
+    if(hour>=6 and hour<12):
+        engine.say('Good Morning!!')
+    elif(hour>=12 and hour<18):
+        engine.say('Good Afternoon!!')
+    else:
+        engine.say('Good Evening!!')
+    #engine.say('Hello Sir!! I am Jarvis. I am your personal voice assistant. Tell me what you want me to do? ')
+    engine.runAndWait()
+
+
+
+def command():
+
+
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print('Listening...')
+        r.pause_threshold = 1
+
+        audio = r.listen(source)
+
+    try:
+        print('Recognizing...')
+        query = r.recognize_google(audio,language='en-in')
+        print(f'User said:- {query}')
+    except Exception as e:
+        print('Can you say it again?')
+        return 'exit'
+
+    return query
+
+
+if __name__ == '__main__':
+
+    wish()
+
+
+
+    while True:
+
+        inp = command().lower()
+        if('wikipedia' in inp):
+            speak('Searching Wikipedia...')
+            inp = inp.replace('wikipedia','')
+            result = wikipedia.summary(inp,sentences=1)
+            speak('According to Wikipedia...')
+            speak(result)
+            print(result)
+
+        elif('youtube' in inp):
+            webbrowser.open('https://www.youtube.com')
+
+
+        elif ('google' in inp):
+            webbrowser.open('https://www.google.com')
+
+
+        elif('play' in inp):
+            song = inp.replace('play','')
+            speak('Playing ' + song)
+            pywhatkit.playonyt(song)
+            time.sleep(8)
+
+
+
+        elif('open linkedin' in inp):
+            webbrowser.open('https://www.linkedin.com')
+
+        elif('joke' in inp):
+            joke = pyjokes.get_joke()
+            speak(joke)
+            print(joke)
+
+
+        elif('read news' in inp):
+
+            main_url= 'https://newsapi.org/v2/top-headlines?country=us&apiKey=234da64516f34b888220a91bd387d3e2'
+            # fetching data in json format
+            open_page = requests.get(main_url).json()
+
+            # getting all articles in a string article
+            article = open_page["articles"]
+
+            # empty list which will
+            # contain all trending news
+            results = []
+
+            for ar in article:
+                results.append(ar["title"])
+
+            for i in range(len(results)):
+                # printing all trending news
+                print(i + 1, results[i])
+
+            # to read the news out loud for us
+            speak(results)
+
+
+        elif ('hit some music' in inp): #plays music from local library on PC.
+            music_dir = 'C:\\Users\\HP\\Music\\Playlists'
+            songs = os.listdir(music_dir)
+            os.startfile(os.path.join(music_dir,songs[0]))
+
+        elif 'time' in inp:
+            t = datetime.datetime.now().strftime('%H:%M:%S')
+            speak('The time is:- ' + t)
+
+        elif 'where is' in inp:
+            loc = inp.replace('where is','')
+            speak(f'Finding {loc} in Google maps')
+            webbrowser.open("https://www.google.co.in/maps/place/"+loc+"") #redirects to the desired location
+                                                                            # which we want to find .
+            time.sleep(6)
+
+
+        elif 'send a message' in inp:  #sends What's App message to particular number at a specified time.
+            r = sr.Recognizer()
+            with sr.Microphone() as source:
+                print('Please say the message...')
+                audio = r.listen(source)
+                txt = r.recognize_google(audio,language='en-in')
+                pywhatkit.sendwhatmsg('+919574731491',txt,10,54)
+
+        elif 'answer my question' in inp:
+
+            r = sr.Recognizer()
+            with sr.Microphone() as source:
+                print('Please ask a question:- ')
+                print('Listening...')
+                audio = r.listen(source)
+                question = r.recognize_google(audio,language='en-in')
+                app_id = 'EHJR94-XXAXV9V4VU'
+                client = wolframalpha.Client(app_id)
+                res = client.query(question)
+                ans = next(res.results).text
+                print('Here\'s the answer, Sir...')
+                speak(ans)
+                print(ans)
+                time.sleep(5)
+
+        elif 'what is' in inp:
+            ans = inp.replace('what is','')
+            speak('Here you go, Sir')
+            pywhatkit.search(ans)
+            time.sleep(10)
+
+
+        elif('exit' in inp):
+            exit()
+
+        elif ('search for' in inp):
+            ans = inp.replace('search for','')
+
+            speak('Finding answer to ' + ans)
+            pywhatkit.search(ans)
+            time.sleep(6)
+
